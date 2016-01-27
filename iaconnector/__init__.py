@@ -40,6 +40,7 @@ class IAConnector(object):
             access_token=access_token,
             renew_token=renew_token,
             base_url=base_url,
+            connector=self,
         )
 
     def init_api(self, base_url=None):
@@ -51,7 +52,28 @@ class IAConnector(object):
         assert self._api is None
         self._api = APIConsumer(
             base_url=base_url,
+            connector=self,
         )
+
+    def propagate_tokens(self, access_token=None, renew_token=None, source=None):
+        """
+        Propagates the access token to the IAConnector elements.
+
+        :param access_token: The access token to propagate
+        :param renew_token: The renew token to propagate
+        :param source: The source object which initiated the propagation
+        """
+        # Set for API
+        if not isinstance(source, APIConsumer) and self._api is not None:
+            if access_token is not None:
+                self._api.access_token = access_token
+
+        # Set for OAuth
+        if not isinstance(source, OAuthConsumer) and self._oauth is not None:
+            if access_token is not None:
+                self._oauth.access_token = access_token
+            if renew_token is not None:
+                self._oauth.renew_token = renew_token
 
     @property
     def oauth(self):

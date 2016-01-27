@@ -14,7 +14,8 @@ class OAuthConsumer(object):
         'refresh': 'token/',
     }
 
-    def __init__(self, client_id, client_secret, redirect_uri, scope, access_token=None, renew_token=None, base_url=None):
+    def __init__(self, client_id, client_secret, redirect_uri, scope, access_token=None, renew_token=None,
+                 base_url=None, connector=None):
         """
         Creates a new OAuth consumer.
 
@@ -32,6 +33,7 @@ class OAuthConsumer(object):
         self.scope = scope
         self.access_token = access_token
         self.renew_token = renew_token
+        self.connector = connector
 
         if base_url is not None:
             if base_url[-1:] != '/':
@@ -76,9 +78,10 @@ class OAuthConsumer(object):
 
     def fetch_access_token(self, authorization_response):
         """
-        Retrieves an access token for the authorized user.
+        Retrieves an access token for the authorized user. Afterwards the access token and renew token can be read using
+        their respective methods.
 
-        Afterwards the access token and renew token can be read using their respective methods.
+        If this OAuthConsumer was instantiated through an IAConnector instance the tokens are automatically propagated.
 
         :param authorization_response: The full URL to which the Inter-Actief site redirected the user after
         authorizing.
@@ -89,6 +92,7 @@ class OAuthConsumer(object):
         )
         self.access_token = response['access_token']
         self.renew_token = response['renew_token']
+        self._propagate_tokens()
 
     def renew_access_token(self):
         """
@@ -120,3 +124,16 @@ class OAuthConsumer(object):
         if self.renew_token is None:
             raise ValueError("There is no renew token present. Request a token using fetch_renew_token.")
         return self.renew_token
+
+    def _propagate_tokens(self):
+        """
+        Propagates the access_token and renew_token to the connector.
+        """
+        from iaconnector import IAConnector
+
+        if isinstance(self.connector, IAConnector):
+            self.connector.propagate_tokens(
+                source=self,
+                access_token=self.access_token,
+                renew_token=self.renew_token,
+            )

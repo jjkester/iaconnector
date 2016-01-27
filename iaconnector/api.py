@@ -12,11 +12,12 @@ class APIConsumer(object):
     """
     base_url = 'https://api.ia.utwente.nl/app/lennart/'
 
-    def __init__(self, bearer_token=None, base_url=None):
+    def __init__(self, access_token=None, base_url=None, connector=None):
         """
         :param base_url: The URL on which the API resides. Defaults to the production Inter-Actief API
         """
-        self.bearer_token = bearer_token
+        self.access_token = access_token
+        self.connector = connector
 
         if base_url is not None:
             if base_url[-1:] != '/':
@@ -51,8 +52,8 @@ class APIConsumer(object):
 
         headers = {}
 
-        if self.bearer_token:
-            headers['Authorization'] = 'Bearer %s' % self.bearer_token
+        if self.access_token:
+            headers['Authorization'] = 'Bearer %s' % self.access_token
 
         response = requests.post(
             url=self.base_url,
