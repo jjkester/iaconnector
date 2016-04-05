@@ -1,5 +1,6 @@
 import random
 import string
+import warnings
 
 import requests
 
@@ -14,7 +15,7 @@ class APIConsumer(object):
 
     def __init__(self, access_token=None, base_url=None, connector=None):
         """
-        :param base_url: The URL on which the API resides. Defaults to the production Inter-Actief API
+        :param base_url: The URL on which the API resides. Defaults to the production Inter-Actief API.
         """
         self.access_token = access_token
         self.connector = connector
@@ -28,8 +29,9 @@ class APIConsumer(object):
     def _get_exception(error_code):
         """
         Returns the appropriate exception class for the given error code.
-        :param error_code: The error code for the exception
-        :return: The exception class
+
+        :param error_code: The error code for the exception.
+        :return: The exception class.
         """
         errors = {}
 
@@ -43,10 +45,12 @@ class APIConsumer(object):
         """
         Performs a JSON-RPC call. Raises an APIError (or subclassed) exception in case of an error.
 
-        :param method: The method to call
-        :param call_id: An optional id. This is not used at this time
-        :param params: The parameters for the method
-        :return: The result of the call
+        The (JSON) result is decoded and returned as native Python objects.
+
+        :param method: The API method to call.
+        :param call_id: (Optional) An identifier for the API call. This is not used at this time.
+        :param params: The parameters for the method call.
+        :return: The result of the call as Python objects.
         """
         call_id = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(10))
 
@@ -79,7 +83,9 @@ class APIConsumer(object):
 
         return result
 
+    # ----------------------
     # Begin of API endpoints
+    # ----------------------
 
     # Authentication module
 
@@ -88,7 +94,7 @@ class APIConsumer(object):
         Requests a new device id. It is recommended to call this method only once in your apps lifetime, just after its
         first start, and store the result for further use.
 
-        :return: The assigned device id
+        :return: The assigned device id.
         """
         return self._call('getDeviceId')
 
@@ -98,11 +104,12 @@ class APIConsumer(object):
 
         This method is deprecated, please use OAuth and do not directly ask the user for his/her password.
 
-        :param username: The username of the user
-        :param password: The password of the user
-        :param device_id: The device id of this app
-        :return: The authentication token for further use
+        :param username: The username of the user.
+        :param password: The password of the user.
+        :param device_id: The device id of this app.
+        :return: The authentication token for further use.
         """
+        warnings.warn("API method 'get_auth_token' is deprecated, use OAuth instead.", DeprecationWarning, stacklevel=2)
         return self._call('getAuthToken', username, password, device_id)
 
     def check_auth_token(self, token):
@@ -110,8 +117,8 @@ class APIConsumer(object):
         Checks if an authentication token is (still) valid. It is recommended to do this after resuming your app, to see
         if the token was revoked.
 
-        :param token: The obtained authentication token
-        :return: Whether the authentication token is valid
+        :param token: The obtained authentication token.
+        :return: Whether the authentication token is valid.
         """
         return self._call('checkAuthToken', token)
 
@@ -119,8 +126,8 @@ class APIConsumer(object):
         """
         Revokes an authentication token.
 
-        :param token: The obtained authentication token to revoke
-        :return: Whether the token was successfully revoked
+        :param token: The obtained authentication token to revoke.
+        :return: Whether the token was successfully revoked.
         """
         return self._call('revokeAuthToken', token)
 
@@ -128,8 +135,8 @@ class APIConsumer(object):
         """
         Retrieves details of the currently authenticated person.
 
-        :param token: The obtained authentication token for the user
-        :return: A dictionary containing the user's details
+        :param token: The obtained authentication token for the user.
+        :return: A dictionary containing the user's details.
         """
         return self._call('getPersonDetails', token)
 
@@ -141,22 +148,22 @@ class APIConsumer(object):
 
         The authentication token is used to check if the user is signed up for an activity.
 
-        :param begin: The minimal end date (inclusive)
-        :param end: The maximal begin date (exclusive)
-        :param token: The optional authentication token
-        :return: An array of dictionaries containing the activity details
+        :param begin: The minimal end date (inclusive).
+        :param end: The maximal begin date (exclusive).
+        :param token: (Optional) The authentication token of a user.
+        :return: An array of dictionaries containing the activity details.
         """
         return self._call('getActivityStream', begin, end, token)
 
     def get_activity_details(self, id, token=None):
         """
-        Retrieves the details of an activity, including its signup options
+        Retrieves the details of an activity, including its signup options.
 
         The authentication token is used to check if the user is signed up for an activity.
 
-        :param id: The id of the activity
-        :param token: The optional authentication token
-        :return: A dictionary containing the activity details
+        :param id: The id of the activity.
+        :param token: (Optional) The authentication token of a user.
+        :return: A dictionary containing the activity details.
         """
         return self._call('getActivityDetailed', id, token)
 
@@ -169,18 +176,18 @@ class APIConsumer(object):
 
         The options must be given as an array of dictionaries containing an id (of the option) and appropriate value.
 
-        :param id: The id of the activity
-        :param price: The calculated costs for the activity
-        :param options: The selected options for the activity
-        :param token: The authentication token of the user to sign up
+        :param id: The id of the activity.
+        :param price: The calculated costs for the activity.
+        :param options: The selected options for the activity.
+        :param token: The authentication token of the user to sign up.
         """
-        return self._call('activitySignup', id, price, options, token)
+        self._call('activitySignup', id, price, options, token)
 
     def revoke_activity_signup(self, id, token):
         """
         Unmarks the current user as an attendee to an activity.
 
-        :param id: The id of the activity
-        :param token: The authentication token of the user to sign out
+        :param id: The id of the activity.
+        :param token: The authentication token of the user to sign out.
         """
-        return self._call('activityRevokeSignup', id, token)
+        self._call('activityRevokeSignup', id, token)

@@ -4,8 +4,8 @@ class APIError(Exception):
 
     def __init__(self, message, error_code=None):
         """
-        :param message: The error message
-        :param error_code: The (integer) error code
+        :param message: The error message.
+        :param error_code: The (integer) error code.
         """
         self.message = message
 

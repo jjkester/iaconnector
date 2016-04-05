@@ -23,9 +23,9 @@ class OAuthConsumer(object):
         :param client_secret: The registered client secret for the application.
         :param redirect_uri: The URI to which the server redirects. This URI must be registered with the application.
         :param scope: The permission scope to request.
-        :param access_token: The current access token, if known.
-        :param base_url: The base URL for the OAuth implementation. This is by default the (production) Inter-Actief
-        web site (`https://www.inter-actief.utwente.nl/o/`).
+        :param access_token: (Optional) The current access token, if known.
+        :param base_url: (Optional) The base URL for the OAuth implementation. This is by default the (production)
+        Inter-Actief web site (`https://www.inter-actief.utwente.nl/o/`).
         """
         self.client_id = client_id
         self.client_secret = client_secret
@@ -46,7 +46,7 @@ class OAuthConsumer(object):
         """
         Returns the OAuth session object and creates a new one if necessary.
 
-        :return: The OAuth session object
+        :return: The OAuth session object.
         """
         if self._session is None:
             self._session = OAuth2Session(
@@ -60,8 +60,8 @@ class OAuthConsumer(object):
         """
         Builds an OAuth URL for the given OAuth endpoint.
 
-        :param endpoint: The name of the OAuth endpoint
-        :return: The external URL to the OAuth endpoint
+        :param endpoint: The name of the OAuth endpoint.
+        :return: The external URL to the OAuth endpoint.
         """
         return ''.join([
             self.base_url,
@@ -72,7 +72,7 @@ class OAuthConsumer(object):
         """
         Returns the authorization URL to which the user can be redirected to log in at Inter-Actief.
 
-        :return: The authorization URL
+        :return: The authorization URL.
         """
         return self._get_session().authorization_url(self._get_url('authorization'))
 
@@ -106,11 +106,13 @@ class OAuthConsumer(object):
         )
         self.access_token = response['access_token']
         self.renew_token = response['renew_token']
+        self._propagate_tokens()
 
     def get_access_token(self):
         """
         Returns the access token for the current session. Throws an exception if there is no access token present.
-        :return: The access token
+
+        :return: The access token.
         """
         if self.access_token is None:
             raise ValueError("There is no access token present. Request a token using fetch_access_token.")
@@ -119,7 +121,8 @@ class OAuthConsumer(object):
     def get_renew_token(self):
         """
         Returns the renew token for the current session. Throws an exception if there is no renew token present.
-        :return: The renew token
+
+        :return: The renew token.
         """
         if self.renew_token is None:
             raise ValueError("There is no renew token present. Request a token using fetch_renew_token.")

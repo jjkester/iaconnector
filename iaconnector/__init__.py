@@ -23,13 +23,13 @@ class IAConnector(object):
         """
         Initializes the OAuth consumer. This is only possible if the consumer has not been initialized yet.
 
-        :param client_id: The client id of your application
-        :param client_secret: The client secret of your application
-        :param scope: The scope your application requires
-        :param redirect_url: The URL to redirect to after authenticating
-        :param access_token: The optional access token if known
-        :param renew_token: The optional renew token if known
-        :param base_url: The optional URL where the OAuth implementation resides.
+        :param client_id: The client id of your application.
+        :param client_secret: The client secret of your application.
+        :param scope: The scope your application requires.
+        :param redirect_url: The URL to redirect to after authenticating.
+        :param access_token: (Optional) The access token, if known.
+        :param renew_token: (Optional) The renew token, if known.
+        :param base_url: (Optional) The base URL of the OAuth implementation. Overrides the default production URL.
         """
         assert self._oauth is None
         self._oauth = OAuthConsumer(
@@ -47,7 +47,7 @@ class IAConnector(object):
         """
         Initializes the API consumer. This is only possible if the consumer has not been initializes yet.
 
-        :param base_url: The optional URL where the API implementation resides.
+        :param base_url: (Optional) The URL of the API implementation. Overrides the default production URL.
         """
         assert self._api is None
         self._api = APIConsumer(
@@ -59,9 +59,17 @@ class IAConnector(object):
         """
         Propagates the access token to the IAConnector elements.
 
-        :param access_token: The access token to propagate
-        :param renew_token: The renew token to propagate
-        :param source: The source object which initiated the propagation
+        This method functions as a bridge to automatically inform the API of a token obtained using OAuth. Therefore, it
+        should not be necessary to call this method yourself. Do not use this method to resume a previous OAuth and/or
+        API session - the preferred way to do this is by calling the `init_oauth` and `init_api` methods on a new
+        instance.
+
+        If no access token or renew token is given the previous value is not changed. It is therefore not possible to
+        unset access tokens or renew tokens using this method.
+
+        :param access_token: The access token to propagate.
+        :param renew_token: The renew token to propagate.
+        :param source: The source object which initiated the propagation.
         """
         # Set for API
         if not isinstance(source, APIConsumer) and self._api is not None:

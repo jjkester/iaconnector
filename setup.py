@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='IAConnector',
-    version='0.1-alpha',
+    version='0.1',
     url='https://www.inter-actief.utwente.nl/',
     author='Jan-Jelle Kester',
     author_email='janjelle@jjkester.nl',
