@@ -10,6 +10,11 @@ from iaconnector.exceptions import APIError
 class APIConsumer(object):
     """
     API consumer for the Inter-Actief API.
+
+    The methods performing API calls are documented to explain the call according to the official API documentation.
+    Additionally, the exact JSON-RPC method name is included for reference.
+
+    The API documentation can be found at https://github.com/Inter-Actief/api-docs.
     """
     base_url = 'https://api.ia.utwente.nl/app/lennart/'
 
@@ -103,6 +108,8 @@ class APIConsumer(object):
         Requests a new device id. It is recommended to call this method only once in your apps lifetime, just after its
         first start, and store the result for further use.
 
+        JSON-RPC method: `getDeviceId`.
+
         :return: The assigned device id.
         """
         return self._call('getDeviceId')
@@ -112,6 +119,8 @@ class APIConsumer(object):
         Attempts to log in and returns the authentication token.
 
         This method is deprecated, please use OAuth and do not directly ask the user for his/her password.
+
+        JSON-RPC method: `getAuthToken`.
 
         :param username: The username of the user.
         :param password: The password of the user.
@@ -126,6 +135,8 @@ class APIConsumer(object):
         Checks if an authentication token is (still) valid. It is recommended to do this after resuming your app, to see
         if the token was revoked.
 
+        JSON-RPC method: `checkAuthToken`.
+
         :param token: The obtained authentication token.
         :return: Whether the authentication token is valid.
         """
@@ -135,6 +146,8 @@ class APIConsumer(object):
         """
         Revokes an authentication token.
 
+        JSON-RPC method: `revokeAuthToken`.
+
         :param token: The obtained authentication token to revoke.
         :return: Whether the token was successfully revoked.
         """
@@ -143,6 +156,10 @@ class APIConsumer(object):
     def get_person_details(self, token):
         """
         Retrieves details of the currently authenticated person.
+
+        For a detailed description of the result, please consult the official API documentation.
+
+        JSON-RPC method: `getPersonDetails`.
 
         :param token: The obtained authentication token for the user.
         :return: A dictionary containing the user's details.
@@ -157,10 +174,14 @@ class APIConsumer(object):
 
         The authentication token is used to check if the user is signed up for an activity.
 
+        For a detailed description of the result, please consult the official API documentation.
+
+        JSON-RPC method: `getActivityStream`.
+
         :param begin: The minimal end date (inclusive).
         :param end: The maximal begin date (exclusive).
         :param token: (Optional) The authentication token of a user.
-        :return: An array of dictionaries containing the activity details.
+        :return: An list of dictionaries containing the activity details.
         """
         return self._call('getActivityStream', begin, end, token)
 
@@ -169,6 +190,10 @@ class APIConsumer(object):
         Retrieves the details of an activity, including its signup options.
 
         The authentication token is used to check if the user is signed up for an activity.
+
+        For a detailed description of the result, please consult the official API documentation.
+
+        JSON-RPC method: `getActivityDetailed`.
 
         :param id: The id of the activity.
         :param token: (Optional) The authentication token of a user.
@@ -183,7 +208,9 @@ class APIConsumer(object):
         The calculated costs for the activity are used to check if the user was presented with the right price. The
         selected options may change the price of the activity.
 
-        The options must be given as an array of dictionaries containing an id (of the option) and appropriate value.
+        The options must be given as an list of dictionaries containing an id (of the option) and appropriate value.
+
+        JSON-RPC method: `activitySignup`.
 
         :param id: The id of the activity.
         :param price: The calculated costs for the activity.
@@ -195,6 +222,8 @@ class APIConsumer(object):
     def revoke_activity_signup(self, id, token):
         """
         Unmarks the current user as an attendee to an activity.
+
+        JSON-RPC method: `activityRevokeSignup`.
 
         :param id: The id of the activity.
         :param token: The authentication token of the user to sign out.
