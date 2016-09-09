@@ -15,7 +15,7 @@ class APITest(unittest.TestCase):
 
     def test_init(self):
         """Tests the behaviour of the constructor."""
-        self.assertEqual(APIConsumer().base_url, APIConsumer.base_url)
+        self.assertEqual(APIConsumer().base_url, 'https://api.ia.utwente.nl/app/lennart/')
         self.assertEqual(APIConsumer(base_url='https://test.example/api').base_url, 'https://test.example/api/')
 
     def test_exceptions(self):
