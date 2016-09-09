@@ -13,12 +13,16 @@ class APIConsumer(object):
     """
     base_url = 'https://api.ia.utwente.nl/app/lennart/'
 
-    def __init__(self, access_token=None, base_url=None, connector=None):
+    def __init__(self, access_token=None, base_url=None, connector=None, preview_mode=False):
         """
-        :param base_url: The URL on which the API resides. Defaults to the production Inter-Actief API.
+        :param access_token: (Optional) The access token to use with the API.
+        :param base_url: (Optional) The URL on which the API resides. Defaults to the production Inter-Actief API.
+        :param connector: (Optional) The `IAConnector` instance this consumer is used with.
+        :param preview_mode: (Optional) Whether to use a sandboxed test environment.
         """
         self.access_token = access_token
         self.connector = connector
+        self.preview_mode = preview_mode
 
         if base_url is not None:
             if base_url[-1:] != '/':
@@ -54,10 +58,15 @@ class APIConsumer(object):
         """
         call_id = ''.join(random.choice(string.ascii_letters + string.digits) for i in range(10))
 
-        headers = {}
+        headers = {
+            'User-Agent': 'IAConnector',
+        }
 
         if self.access_token:
             headers['Authorization'] = 'Bearer %s' % self.access_token
+
+        if self.preview_mode:
+            headers['User-Agent'] += ' PREVIEWMODE'
 
         response = requests.post(
             url=self.base_url,
