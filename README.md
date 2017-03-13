@@ -25,6 +25,16 @@ IAConnector requires the following external libraries, which are installed autom
 
 Our goal is to make this library available on PyPI, however, this has not yet happened.
 
+#### From GitHub
+
+You can specify the following in your requirements file, as per the [pip docs](https://pip.readthedocs.io/en/stable/reference/pip_install/#git):
+
+```
+-e git+https://github.com/jjkester/iaconnector.git@master#egg=iaconnector
+```
+
+You can replace `@master`, which provides you with the latest, possibly unstable version, with a tag name (or any other valid git reference).
+
 ### Using IAConnector
 
 IAConnector features a base class from which all functionality can be accessed. Below you will find a short example
@@ -102,8 +112,11 @@ else:
     print("No user details - token is not valid!")
 ```
 
+The OAuth part might raise exceptions inheriting from `OAuth2Error` from the `oauthlib` package.
+The API might raise exception inheriting from `APIError` in `iaconnector.exceptions`. This module also provides more granular exceptions to use.
+
 ### API coverage
 
 At the moment only the 'authentication module' and parts of the 'activity module' are implemented.
 This should be enough to manage users and subscribe users to your activity.
-More endpoints can be added on request, please open an issue to do so.
+More endpoints can be added on request, please open an issue to request these or create a pull request and add them yourself.
