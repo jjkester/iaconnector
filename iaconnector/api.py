@@ -2,9 +2,13 @@ import random
 import string
 import warnings
 
+import logging
 import requests
 
 from iaconnector.exceptions import APIError
+
+
+logger = logging.getLogger('iaconnector')
 
 
 class APIConsumer(object):
@@ -33,6 +37,11 @@ class APIConsumer(object):
             if base_url[-1:] != '/':
                 base_url += '/'
             self.base_url = base_url
+
+        logger.debug("API initialized at {url:s} with preview mode {preview:s}.".format(
+            url=self.base_url,
+            preview='yes' if self.preview_mode else 'no',
+        ))
 
     @staticmethod
     def _get_exception(error_code):
@@ -73,6 +82,11 @@ class APIConsumer(object):
         if self.preview_mode:
             headers['User-Agent'] += ' PREVIEWMODE'
 
+        logger.debug("API request: {method:s}({params:s}).".format(
+            method=method,
+            params=','.join(map(str, params)),
+        ))
+
         response = requests.post(
             url=self.base_url,
             json={
@@ -83,16 +97,21 @@ class APIConsumer(object):
             headers=headers
         )
 
-        if 'error' in response and response['error'] is not None:
-            error = response['error']
+        response_json = response.json()
+
+        logger.debug("API response: {json:s}".format(json=response_json))
+
+        if 'error' in response_json and response_json['error'] is not None:
+            error = response_json['error']
 
             if 'code' in error and 'message' in error:
                 raise self._get_exception(error['code'])(error['message'])
             else:
                 raise APIError(error.get('message'))
         try:
-            result = response.json()['result']
+            result = response_json['result']
         except (TypeError, KeyError) as e:
+            logger.error("Invalid response from server: %s" % str(e))
             raise APIError("Invalid response from server: %s" % str(e))
 
         return result
@@ -130,30 +149,28 @@ class APIConsumer(object):
         warnings.warn("API method 'get_auth_token' is deprecated, use OAuth instead.", DeprecationWarning, stacklevel=2)
         return self._call('getAuthToken', username, password, device_id)
 
-    def check_auth_token(self, token):
+    def check_auth_token(self):
         """
         Checks if an authentication token is (still) valid. It is recommended to do this after resuming your app, to see
         if the token was revoked.
 
         JSON-RPC method: `checkAuthToken`.
 
-        :param token: The obtained authentication token.
         :return: Whether the authentication token is valid.
         """
-        return self._call('checkAuthToken', token)
+        return self._call('checkAuthToken')
 
-    def revoke_auth_token(self, token):
+    def revoke_auth_token(self):
         """
         Revokes an authentication token.
 
         JSON-RPC method: `revokeAuthToken`.
 
-        :param token: The obtained authentication token to revoke.
         :return: Whether the token was successfully revoked.
         """
-        return self._call('revokeAuthToken', token)
+        return self._call('revokeAuthToken')
 
-    def get_person_details(self, token):
+    def get_person_details(self):
         """
         Retrieves details of the currently authenticated person.
 
@@ -161,14 +178,13 @@ class APIConsumer(object):
 
         JSON-RPC method: `getPersonDetails`.
 
-        :param token: The obtained authentication token for the user.
         :return: A dictionary containing the user's details.
         """
-        return self._call('getPersonDetails', token)
+        return self._call('getPersonDetails')
 
     # Activity module
 
-    def get_activity_stream(self, begin, end, token=None):
+    def get_activity_stream(self, begin, end):
         """
         Retrieves a list of activities.
 
@@ -180,12 +196,11 @@ class APIConsumer(object):
 
         :param begin: The minimal end date (inclusive).
         :param end: The maximal begin date (exclusive).
-        :param token: (Optional) The authentication token of a user.
         :return: An list of dictionaries containing the activity details.
         """
-        return self._call('getActivityStream', begin, end, token)
+        return self._call('getActivityStream', begin, end)
 
-    def get_activity_details(self, id, token=None):
+    def get_activity_details(self, id):
         """
         Retrieves the details of an activity, including its signup options.
 
@@ -196,12 +211,11 @@ class APIConsumer(object):
         JSON-RPC method: `getActivityDetailed`.
 
         :param id: The id of the activity.
-        :param token: (Optional) The authentication token of a user.
         :return: A dictionary containing the activity details.
         """
-        return self._call('getActivityDetailed', id, token)
+        return self._call('getActivityDetailed', id)
 
-    def activity_signup(self, id, price, options, token):
+    def activity_signup(self, id, price, options):
         """
         Marks the user as an attendee to an activity.
 
@@ -215,17 +229,15 @@ class APIConsumer(object):
         :param id: The id of the activity.
         :param price: The calculated costs for the activity.
         :param options: The selected options for the activity.
-        :param token: The authentication token of the user to sign up.
         """
-        self._call('activitySignup', id, price, options, token)
+        self._call('activitySignup', id, price, options)
 
-    def revoke_activity_signup(self, id, token):
+    def revoke_activity_signup(self, id):
         """
         Unmarks the current user as an attendee to an activity.
 
         JSON-RPC method: `activityRevokeSignup`.
 
         :param id: The id of the activity.
-        :param token: The authentication token of the user to sign out.
         """
-        self._call('activityRevokeSignup', id, token)
+        self._call('activityRevokeSignup', id)

@@ -4,8 +4,14 @@ Library for interacting with the Inter-Actief web site (https://www.inter-actief
 This library provides OAuth (2) authentication and access to the API. Access to these resources is limited to members
 of study association Inter-Actief.
 """
+import logging
+
 from iaconnector.api import APIConsumer
 from iaconnector.oauth import OAuthConsumer
+from iaconnector.exceptions import APIError, NotLoggedInError, SignupError, UnknownDeviceError, OtherError
+
+
+logger = logging.getLogger('iaconnector')
 
 
 class IAConnector(object):
@@ -75,13 +81,16 @@ class IAConnector(object):
         if not isinstance(source, APIConsumer) and self._api is not None:
             if access_token is not None:
                 self._api.access_token = access_token
+                logger.debug("Access token propagated to API.")
 
         # Set for OAuth
         if not isinstance(source, OAuthConsumer) and self._oauth is not None:
             if access_token is not None:
                 self._oauth.access_token = access_token
+                logger.debug("Access token propagated to OAuth.")
             if renew_token is not None:
                 self._oauth.renew_token = renew_token
+                logger.debug("Renew token propagated to OAuth.")
 
     @property
     def oauth(self):

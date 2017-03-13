@@ -1,4 +1,10 @@
+from datetime import datetime, timedelta
+
+import logging
 from requests_oauthlib import OAuth2Session
+
+
+logger = logging.getLogger('iaconnector')
 
 
 class OAuthConsumer(object):
@@ -33,6 +39,7 @@ class OAuthConsumer(object):
         self.scope = scope
         self.access_token = access_token
         self.renew_token = renew_token
+        self.token_expiry = None
         self.connector = connector
 
         if base_url is not None:
@@ -41,6 +48,11 @@ class OAuthConsumer(object):
             self.base_url = base_url
 
         self._session = None
+
+        logger.debug("OAuth initialized at {url:s} with client id {client:s}.".format(
+            url=self.base_url,
+            client=self.client_id,
+        ))
 
     def _get_session(self):
         """
@@ -86,12 +98,16 @@ class OAuthConsumer(object):
         :param authorization_response: The full URL to which the Inter-Actief site redirected the user after
         authorizing.
         """
+        logger.debug("Fetching access token for response {url:s}.".format(url=authorization_response))
         response = self._get_session().fetch_token(
             token_url=self._get_url('token'),
             authorization_response=authorization_response,
+            client_secret=self.client_secret,
+            client_id=self.client_id,
         )
         self.access_token = response['access_token']
-        self.renew_token = response['renew_token']
+        self.renew_token = response['refresh_token']
+        self.token_expiry = datetime.utcnow() + timedelta(seconds=response['expires_in'])
         self._propagate_tokens()
 
     def renew_access_token(self):
@@ -100,12 +116,15 @@ class OAuthConsumer(object):
 
         Afterwards the access token and renew token can be read using their respective methods.
         """
+        logger.debug("Renewing access token, old token {token:s}.".format(token=self.access_token))
         response = self._get_session().refresh_token(
             self._get_url('refresh'),
             refresh_token=self.renew_token,
+            client_secret=self.client_secret,
+            client_id=self.client_id,
         )
         self.access_token = response['access_token']
-        self.renew_token = response['renew_token']
+        self.renew_token = response['refresh_token']
         self._propagate_tokens()
 
     def get_access_token(self):
@@ -127,6 +146,14 @@ class OAuthConsumer(object):
         if self.renew_token is None:
             raise ValueError("There is no renew token present. Request a token using fetch_renew_token.")
         return self.renew_token
+
+    def get_token_expiry(self):
+        """
+        Returns the datetime the tokens expire. Defaults to `None`.
+
+        :return: The expiry datetime.
+        """
+        return self.token_expiry
 
     def _propagate_tokens(self):
         """
