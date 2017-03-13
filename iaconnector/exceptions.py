@@ -1,15 +1,3 @@
-class OAuthError(Exception):
-    """Base error class for OAuth exceptions."""
-    def __init__(self, message):
-        """
-        :param message: The error message.
-        """
-        self.message = str(message)
-
-    def __str__(self):
-        return self.message
-
-
 class APIError(Exception):
     """Base error class for API exceptions."""
     error_code = None
